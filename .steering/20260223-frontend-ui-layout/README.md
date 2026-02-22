@@ -1,6 +1,6 @@
 # フロントエンド UI レイアウト統合
 
-status: todo
+status: done
 
 ## ゴール
 Header・MainLayout・ControlBar の UI コンポーネントを実装し、App.tsx に組み込んで MVP として動作する完全な画面を完成させる。

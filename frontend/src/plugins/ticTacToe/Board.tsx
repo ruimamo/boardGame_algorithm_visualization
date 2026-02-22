@@ -18,37 +18,42 @@ export const TicTacToeBoard: React.FC<BoardProps> = ({
     <svg
       width={SIZE}
       height={SIZE}
-      style={{ display: "block", userSelect: "none" }}
+      style={{ display: "block", userSelect: "none", background: "white" }}
     >
-      {/* グリッド線 */}
-      <line x1={CELL} y1={0} x2={CELL} y2={SIZE} stroke="#333" strokeWidth={2} />
-      <line x1={CELL * 2} y1={0} x2={CELL * 2} y2={SIZE} stroke="#333" strokeWidth={2} />
-      <line x1={0} y1={CELL} x2={SIZE} y2={CELL} stroke="#333" strokeWidth={2} />
-      <line x1={0} y1={CELL * 2} x2={SIZE} y2={CELL * 2} stroke="#333" strokeWidth={2} />
+      {/* 1. lastMove のハイライト背景（グリッド線の下） */}
+      {board.map((_, i) => {
+        if (lastMove?.position !== i) return null;
+        const row = Math.floor(i / 3);
+        const col = i % 3;
+        return (
+          <rect
+            key={`bg-${i}`}
+            x={col * CELL}
+            y={row * CELL}
+            width={CELL}
+            height={CELL}
+            fill="#fffde7"
+          />
+        );
+      })}
 
-      {/* セル */}
+      {/* 2. グリッド線 */}
+      <line x1={CELL}     y1={0}    x2={CELL}     y2={SIZE} stroke="#333" strokeWidth={2} />
+      <line x1={CELL * 2} y1={0}    x2={CELL * 2} y2={SIZE} stroke="#333" strokeWidth={2} />
+      <line x1={0}    y1={CELL}     x2={SIZE} y2={CELL}     stroke="#333" strokeWidth={2} />
+      <line x1={0}    y1={CELL * 2} x2={SIZE} y2={CELL * 2} stroke="#333" strokeWidth={2} />
+
+      {/* 3. X / O の記号 + クリック領域 */}
       {board.map((value, i) => {
         const row = Math.floor(i / 3);
         const col = i % 3;
         const x = col * CELL;
         const y = row * CELL;
-        const isLast = lastMove?.position === i;
         const isEmpty = value === 0;
         const clickable = isInteractive && isEmpty;
 
         return (
           <g key={i}>
-            {/* セル背景（lastMove のハイライト） */}
-            <rect
-              x={x}
-              y={y}
-              width={CELL}
-              height={CELL}
-              fill={isLast ? "#fffde7" : "white"}
-              style={{ cursor: clickable ? "pointer" : "default" }}
-              onClick={() => clickable && onMove({ position: i })}
-            />
-
             {/* X（先手） */}
             {value === 1 && (
               <g>
@@ -77,7 +82,7 @@ export const TicTacToeBoard: React.FC<BoardProps> = ({
               />
             )}
 
-            {/* クリック可能セルのホバー領域 */}
+            {/* クリック領域 */}
             {clickable && (
               <rect
                 x={x}
