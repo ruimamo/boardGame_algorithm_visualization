@@ -1,6 +1,6 @@
 # フロントエンド 探索ツリー可視化
 
-status: todo
+status: done
 
 ## ゴール
 探索ツリーを React Flow で描画するコンポーネントと、d3-hierarchy を使ったレイアウト計算ユーティリティを実装する。
