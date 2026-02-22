@@ -1,15 +1,9 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
+
+from api.websocket import register_plugins, websocket_endpoint
 
 app = FastAPI(title="Board Game Algorithm Visualizer")
 
+register_plugins()
 
-@app.websocket("/ws")
-async def websocket_endpoint(ws: WebSocket):
-    await ws.accept()
-    try:
-        while True:
-            data = await ws.receive_json()
-            # MVP初期段階: 受信したメッセージをそのまま返す（疎通確認用）
-            await ws.send_json({"type": "echo", "data": data})
-    except WebSocketDisconnect:
-        pass
+app.websocket("/ws")(websocket_endpoint)
