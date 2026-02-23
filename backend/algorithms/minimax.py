@@ -9,7 +9,7 @@ class Minimax(AlgorithmPlugin):
 
     name = "minimax"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict[str, Any]:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None, **kwargs: Any) -> dict[str, Any]:
         self._node_counter = 0
         best_move, value = self._minimax(game, state, emit_event, parent_id=None, depth=0, max_depth=max_depth)
         emit_event({

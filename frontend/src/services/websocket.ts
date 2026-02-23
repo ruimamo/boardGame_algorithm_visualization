@@ -71,8 +71,8 @@ class WebSocketService {
     this.send({ type: "apply_move", game, state, move });
   }
 
-  startSearch(game: string, algorithm: string, state: GameBoardState): void {
-    this.send({ type: "start_search", game, algorithm, state });
+  startSearch(game: string, algorithm: string, state: GameBoardState, iterations?: number): void {
+    this.send({ type: "start_search", game, algorithm, state, ...(iterations !== undefined ? { iterations } : {}) });
   }
 
   private send(data: object): void {

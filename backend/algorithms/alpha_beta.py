@@ -9,7 +9,7 @@ class AlphaBeta(AlgorithmPlugin):
 
     name = "alpha_beta"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict[str, Any]:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None, **kwargs: Any) -> dict[str, Any]:
         self._node_counter = 0
         best_move, value = self._alpha_beta(
             game, state, emit_event,

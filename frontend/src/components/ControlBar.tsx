@@ -7,6 +7,7 @@ export const ControlBar: React.FC = () => {
   const gameName = useGameStore((s) => s.gameName);
   const algorithmName = useGameStore((s) => s.algorithmName);
   const currentState = useGameStore((s) => s.currentState);
+  const iterations = useGameStore((s) => s.iterations);
   const resetGame = useGameStore((s) => s.reset);
 
   const events = useTreeStore((s) => s.events);
@@ -29,7 +30,7 @@ export const ControlBar: React.FC = () => {
     if (!currentState) return;
     clearTree();
     pause();
-    wsService.startSearch(gameName, algorithmName, currentState);
+    wsService.startSearch(gameName, algorithmName, currentState, algorithmName === "mcts" ? iterations : undefined);
   };
 
   const handleReset = () => {

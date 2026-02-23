@@ -6,6 +6,7 @@ from games.tic_tac_toe import TicTacToe
 from games.kings_valley import KingsValleyPlugin
 from algorithms.minimax import Minimax
 from algorithms.alpha_beta import AlphaBeta
+from algorithms.mcts import MCTS
 
 GAMES: dict[str, GamePlugin] = {}
 ALGORITHMS: dict[str, AlgorithmPlugin] = {}
@@ -14,7 +15,7 @@ ALGORITHMS: dict[str, AlgorithmPlugin] = {}
 def register_plugins() -> None:
     for g in [TicTacToe(), KingsValleyPlugin()]:
         GAMES[g.name] = g
-    for a in [Minimax(), AlphaBeta()]:
+    for a in [Minimax(), AlphaBeta(), MCTS()]:
         ALGORITHMS[a.name] = a
 
 
@@ -95,8 +96,9 @@ async def handle_start_search(ws: WebSocket, data: dict) -> None:
 
     state = data["state"]
     max_depth = 4 if game_name == "kings_valley" else None
+    iterations = int(data.get("iterations", 50))
     events: list[dict] = []
-    result = algorithm.search(game, state, events.append, max_depth=max_depth)
+    result = algorithm.search(game, state, events.append, max_depth=max_depth, iterations=iterations)
 
     best_move = None
     if result["best_move"] is not None:

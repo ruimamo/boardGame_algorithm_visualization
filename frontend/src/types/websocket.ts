@@ -19,6 +19,7 @@ export type StartSearchRequest = {
   game: string;
   algorithm: string;
   state: GameBoardState;
+  iterations?: number;
 };
 
 export type ClientMessage =
@@ -90,8 +91,30 @@ export type SearchCompleteEvent = {
   total_nodes: number;
 };
 
+export type NodeSelectedEvent = {
+  type: "node_selected";
+  id: string;
+  ucb_value: number;
+};
+
+export type SimulationDoneEvent = {
+  type: "simulation_done";
+  id: string;
+  result: number;
+};
+
+export type BackpropagatedEvent = {
+  type: "backpropagated";
+  id: string;
+  visits: number;
+  win_rate: number;
+};
+
 export type SearchEvent =
   | NodeExpandedEvent
   | NodeEvaluatedEvent
   | NodePrunedEvent
+  | NodeSelectedEvent
+  | SimulationDoneEvent
+  | BackpropagatedEvent
   | SearchCompleteEvent;

@@ -11,8 +11,10 @@ const STATUS_COLOR: Record<string, string> = {
 export const Header: React.FC = () => {
   const gameName = useGameStore((s) => s.gameName);
   const algorithmName = useGameStore((s) => s.algorithmName);
+  const iterations = useGameStore((s) => s.iterations);
   const setGame = useGameStore((s) => s.setGame);
   const setAlgorithm = useGameStore((s) => s.setAlgorithm);
+  const setIterations = useGameStore((s) => s.setIterations);
   const status = useConnectionStore((s) => s.status);
 
   return (
@@ -52,8 +54,23 @@ export const Header: React.FC = () => {
         >
           <option value="minimax">Minimax</option>
           <option value="alpha_beta">Alpha-Beta</option>
+          <option value="mcts">MCTS</option>
         </select>
       </label>
+
+      {algorithmName === "mcts" && (
+        <label style={{ fontSize: 13 }}>
+          イテレーション数:{" "}
+          <input
+            type="number"
+            min={1}
+            max={500}
+            value={iterations}
+            onChange={(e) => setIterations(Math.max(1, Math.min(500, Number(e.target.value))))}
+            style={{ width: 60, marginLeft: 4 }}
+          />
+        </label>
+      )}
 
       <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
         <span

@@ -17,9 +17,12 @@ export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) =
 
   const isSelected = selectedNodeId === id;
   const isExpanded = expandedNodeIds.has(id);
-  const { isPruned, value, hasHiddenChildren } = data;
+  const { isPruned, value, hasHiddenChildren, visits, winRate, isSelected: isMctsSelected } = data;
 
-  const borderColor = isSelected ? "#f9a825" : isPruned ? "#bdbdbd" : "#1e88e5";
+  const borderColor = isSelected ? "#f9a825"
+    : isMctsSelected ? "#ff9800"
+    : isPruned ? "#bdbdbd"
+    : "#1e88e5";
   const bg = isPruned ? "#f5f5f5" : "white";
 
   return (
@@ -39,7 +42,11 @@ export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) =
         <renderer.MiniBoardComponent state={data.state} size={MINI_SIZE} />
       )}
 
-      {value !== null && (
+      {visits > 0 ? (
+        <div style={{ textAlign: "center", fontSize: 11, color: "#333", marginTop: 2 }}>
+          {visits}回 / {winRate !== null ? (winRate >= 0 ? "+" : "") + winRate.toFixed(2) : "—"}
+        </div>
+      ) : value !== null ? (
         <div
           style={{
             textAlign: "center",
@@ -50,7 +57,7 @@ export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) =
         >
           {value > 0 ? `+${value}` : String(value)}
         </div>
-      )}
+      ) : null}
 
       {hasHiddenChildren && (
         <div

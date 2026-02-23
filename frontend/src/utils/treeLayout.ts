@@ -13,6 +13,10 @@ export interface TreeNodeData extends Record<string, unknown> {
   alpha: number | null;
   beta: number | null;
   hasHiddenChildren: boolean;
+  // MCTS
+  visits: number;
+  winRate: number | null;
+  isSelected: boolean;
 }
 
 function buildNodeMap(
@@ -35,6 +39,9 @@ function buildNodeMap(
           alpha: null,
           beta: null,
           hasHiddenChildren: false,
+          visits: 0,
+          winRate: null,
+          isSelected: false,
         });
         break;
       case "node_evaluated": {
@@ -48,6 +55,20 @@ function buildNodeMap(
           node.isPruned = true;
           node.alpha = event.alpha;
           node.beta = event.beta;
+        }
+        break;
+      }
+      case "node_selected": {
+        for (const n of nodeMap.values()) n.isSelected = false;
+        const node = nodeMap.get(event.id);
+        if (node) node.isSelected = true;
+        break;
+      }
+      case "backpropagated": {
+        const node = nodeMap.get(event.id);
+        if (node) {
+          node.visits = event.visits;
+          node.winRate = event.win_rate;
         }
         break;
       }
