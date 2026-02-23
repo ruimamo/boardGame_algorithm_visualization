@@ -72,16 +72,15 @@ export function buildTreeFromEvents(
 
   const nodeArray = Array.from(nodeMap.values());
 
-  const root = stratify<TreeNodeData>()
+  // Step 1: 全ノードで hierarchy を構築して depth を確定する
+  const fullRoot = stratify<TreeNodeData>()
     .id((d) => d.id)
     .parentId((d) => d.parentId)(nodeArray);
 
-  const treeRoot = tree<TreeNodeData>().nodeSize([120, 160])(root);
-
-  // 可視ノードのIDセットを構築
-  // 可視条件: depth <= 2 OR (親が可視 && 親.id ∈ expandedNodeIds)
+  // Step 2: 可視ノード ID を BFS で決定
+  // 条件: depth <= 2 OR (親が可視 && 親.id ∈ expandedNodeIds)
   const visibleIds = new Set<string>();
-  treeRoot.each((d) => {
+  fullRoot.each((d) => {
     if (d.depth <= 2) {
       visibleIds.add(d.data.id);
     } else {
@@ -92,27 +91,35 @@ export function buildTreeFromEvents(
     }
   });
 
-  // hasHiddenChildren を設定
-  treeRoot.each((d) => {
+  // Step 3: 可視ノードに hasHiddenChildren を設定
+  fullRoot.each((d) => {
     if (visibleIds.has(d.data.id) && d.children) {
-      const hasHidden = d.children.some((child) => !visibleIds.has(child.data.id));
-      d.data.hasHiddenChildren = hasHidden;
+      d.data.hasHiddenChildren = d.children.some((c) => !visibleIds.has(c.data.id));
     }
   });
 
+  // Step 4: 可視ノードのみで hierarchy とレイアウトを再構築
+  // → 非表示の子孫を無視した詰まったレイアウトになる
+  const visibleArray = nodeArray.filter((n) => visibleIds.has(n.id));
+
+  const visibleRoot = stratify<TreeNodeData>()
+    .id((d) => d.id)
+    .parentId((d) => d.parentId)(visibleArray);
+
+  const treeLayout = tree<TreeNodeData>().nodeSize([120, 160])(visibleRoot);
+
+  // Step 5: ReactFlow ノードとエッジを生成
   const nodes: ReactFlowNode<TreeNodeData>[] = [];
   const edges: ReactFlowEdge[] = [];
 
-  treeRoot.each((d) => {
-    if (!visibleIds.has(d.data.id)) return;
-
+  treeLayout.each((d) => {
     nodes.push({
       id: d.data.id,
       position: { x: d.x, y: d.y },
       data: { ...d.data },
       type: "treeNode",
     });
-    if (d.parent && visibleIds.has(d.parent.data.id)) {
+    if (d.parent) {
       edges.push({
         id: `${d.parent.data.id}-${d.data.id}`,
         source: d.parent.data.id,

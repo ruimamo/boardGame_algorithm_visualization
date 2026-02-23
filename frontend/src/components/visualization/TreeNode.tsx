@@ -11,8 +11,6 @@ export type TicTacToeTreeNode = Node<TreeNodeData, "treeNode">;
 
 export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) => {
   const selectedNodeId = useTreeStore((s) => s.selectedNodeId);
-  const selectNode = useTreeStore((s) => s.selectNode);
-  const toggleExpand = useTreeStore((s) => s.toggleExpand);
   const expandedNodeIds = useTreeStore((s) => s.expandedNodeIds);
   const gameName = useGameStore((s) => s.gameName);
   const renderer = getGameRenderer(gameName);
@@ -26,7 +24,6 @@ export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) =
 
   return (
     <div
-      onClick={() => { selectNode(isSelected ? null : id); toggleExpand(id); }}
       style={{
         border: `2px solid ${borderColor}`,
         borderRadius: 6,
