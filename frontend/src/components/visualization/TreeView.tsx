@@ -10,10 +10,11 @@ const nodeTypes = { treeNode: TreeNode };
 export const TreeView: React.FC = () => {
   const events = useTreeStore((s) => s.events);
   const currentStep = useTreeStore((s) => s.currentStep);
+  const expandedNodeIds = useTreeStore((s) => s.expandedNodeIds);
 
   const { nodes, edges } = useMemo(
-    () => buildTreeFromEvents(events, currentStep),
-    [events, currentStep],
+    () => buildTreeFromEvents(events, currentStep, expandedNodeIds),
+    [events, currentStep, expandedNodeIds],
   );
 
   return (

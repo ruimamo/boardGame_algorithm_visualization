@@ -12,18 +12,21 @@ export type TicTacToeTreeNode = Node<TreeNodeData, "treeNode">;
 export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) => {
   const selectedNodeId = useTreeStore((s) => s.selectedNodeId);
   const selectNode = useTreeStore((s) => s.selectNode);
+  const toggleExpand = useTreeStore((s) => s.toggleExpand);
+  const expandedNodeIds = useTreeStore((s) => s.expandedNodeIds);
   const gameName = useGameStore((s) => s.gameName);
   const renderer = getGameRenderer(gameName);
 
   const isSelected = selectedNodeId === id;
-  const { isPruned, value } = data;
+  const isExpanded = expandedNodeIds.has(id);
+  const { isPruned, value, hasHiddenChildren } = data;
 
   const borderColor = isSelected ? "#f9a825" : isPruned ? "#bdbdbd" : "#1e88e5";
   const bg = isPruned ? "#f5f5f5" : "white";
 
   return (
     <div
-      onClick={() => selectNode(isSelected ? null : id)}
+      onClick={() => { selectNode(isSelected ? null : id); toggleExpand(id); }}
       style={{
         border: `2px solid ${borderColor}`,
         borderRadius: 6,
@@ -49,6 +52,20 @@ export const TreeNode: React.FC<NodeProps<TicTacToeTreeNode>> = ({ data, id }) =
           }}
         >
           {value > 0 ? `+${value}` : String(value)}
+        </div>
+      )}
+
+      {hasHiddenChildren && (
+        <div
+          style={{
+            textAlign: "center",
+            fontSize: 10,
+            color: "#1e88e5",
+            marginTop: 2,
+            userSelect: "none",
+          }}
+        >
+          {isExpanded ? "▲" : "▼"}
         </div>
       )}
 

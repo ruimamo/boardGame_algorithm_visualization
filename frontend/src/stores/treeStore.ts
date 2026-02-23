@@ -7,12 +7,14 @@ interface TreeState {
   currentStep: number;
   selectedNodeId: string | null;
   bestMove: MoveDict | null;
+  expandedNodeIds: Set<string>;
 
   setEvents: (events: SearchEvent[], bestMove: MoveDict | null) => void;
   stepForward: () => void;
   stepBackward: () => void;
   goToStep: (step: number) => void;
   selectNode: (nodeId: string | null) => void;
+  toggleExpand: (nodeId: string) => void;
   clear: () => void;
 }
 
@@ -21,8 +23,9 @@ export const useTreeStore = create<TreeState>((set, get) => ({
   currentStep: -1,
   selectedNodeId: null,
   bestMove: null,
+  expandedNodeIds: new Set<string>(),
 
-  setEvents: (events, bestMove) => set({ events, bestMove, currentStep: -1, selectedNodeId: null }),
+  setEvents: (events, bestMove) => set({ events, bestMove, currentStep: -1, selectedNodeId: null, expandedNodeIds: new Set<string>() }),
   stepForward: () => {
     const { currentStep, events } = get();
     if (currentStep < events.length - 1) {
@@ -41,5 +44,15 @@ export const useTreeStore = create<TreeState>((set, get) => ({
     set({ currentStep: clamped });
   },
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
-  clear: () => set({ events: [], currentStep: -1, selectedNodeId: null, bestMove: null }),
+  toggleExpand: (nodeId) => {
+    const { expandedNodeIds } = get();
+    const next = new Set(expandedNodeIds);
+    if (next.has(nodeId)) {
+      next.delete(nodeId);
+    } else {
+      next.add(nodeId);
+    }
+    set({ expandedNodeIds: next });
+  },
+  clear: () => set({ events: [], currentStep: -1, selectedNodeId: null, bestMove: null, expandedNodeIds: new Set<string>() }),
 }));

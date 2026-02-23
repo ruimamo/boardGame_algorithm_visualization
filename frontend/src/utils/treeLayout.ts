@@ -12,6 +12,7 @@ export interface TreeNodeData extends Record<string, unknown> {
   isPruned: boolean;
   alpha: number | null;
   beta: number | null;
+  hasHiddenChildren: boolean;
 }
 
 function buildNodeMap(
@@ -33,6 +34,7 @@ function buildNodeMap(
           isPruned: false,
           alpha: null,
           beta: null,
+          hasHiddenChildren: false,
         });
         break;
       case "node_evaluated": {
@@ -60,6 +62,7 @@ function buildNodeMap(
 export function buildTreeFromEvents(
   events: SearchEvent[],
   currentStep: number,
+  expandedNodeIds: Set<string> = new Set(),
 ): { nodes: ReactFlowNode<TreeNodeData>[]; edges: ReactFlowEdge[] } {
   const nodeMap = buildNodeMap(events, currentStep);
 
@@ -75,17 +78,41 @@ export function buildTreeFromEvents(
 
   const treeRoot = tree<TreeNodeData>().nodeSize([120, 160])(root);
 
+  // 可視ノードのIDセットを構築
+  // 可視条件: depth <= 2 OR (親が可視 && 親.id ∈ expandedNodeIds)
+  const visibleIds = new Set<string>();
+  treeRoot.each((d) => {
+    if (d.depth <= 2) {
+      visibleIds.add(d.data.id);
+    } else {
+      const parentId = d.parent?.data.id;
+      if (parentId && visibleIds.has(parentId) && expandedNodeIds.has(parentId)) {
+        visibleIds.add(d.data.id);
+      }
+    }
+  });
+
+  // hasHiddenChildren を設定
+  treeRoot.each((d) => {
+    if (visibleIds.has(d.data.id) && d.children) {
+      const hasHidden = d.children.some((child) => !visibleIds.has(child.data.id));
+      d.data.hasHiddenChildren = hasHidden;
+    }
+  });
+
   const nodes: ReactFlowNode<TreeNodeData>[] = [];
   const edges: ReactFlowEdge[] = [];
 
   treeRoot.each((d) => {
+    if (!visibleIds.has(d.data.id)) return;
+
     nodes.push({
       id: d.data.id,
       position: { x: d.x, y: d.y },
-      data: d.data,
+      data: { ...d.data },
       type: "treeNode",
     });
-    if (d.parent) {
+    if (d.parent && visibleIds.has(d.parent.data.id)) {
       edges.push({
         id: `${d.parent.data.id}-${d.data.id}`,
         source: d.parent.data.id,

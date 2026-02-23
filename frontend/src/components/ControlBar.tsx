@@ -13,6 +13,7 @@ export const ControlBar: React.FC = () => {
   const currentStep = useTreeStore((s) => s.currentStep);
   const stepForward = useTreeStore((s) => s.stepForward);
   const stepBackward = useTreeStore((s) => s.stepBackward);
+  const goToStep = useTreeStore((s) => s.goToStep);
   const clearTree = useTreeStore((s) => s.clear);
 
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
@@ -72,6 +73,9 @@ export const ControlBar: React.FC = () => {
       </button>
       <button style={btnStyle} onClick={stepForward} disabled={!hasEvents || atEnd}>
         ⏭
+      </button>
+      <button style={btnStyle} onClick={() => goToStep(events.length - 1)} disabled={!hasEvents || atEnd}>
+        最後へ
       </button>
 
       {/* ステップ表示 */}
