@@ -9,12 +9,12 @@ class AlphaBeta(AlgorithmPlugin):
 
     name = "alpha_beta"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent) -> dict[str, Any]:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict[str, Any]:
         self._node_counter = 0
         best_move, value = self._alpha_beta(
             game, state, emit_event,
             alpha=float("-inf"), beta=float("inf"),
-            parent_id=None,
+            parent_id=None, depth=0, max_depth=max_depth,
         )
         emit_event({
             "type": "search_complete",
@@ -31,6 +31,8 @@ class AlphaBeta(AlgorithmPlugin):
         alpha: float,
         beta: float,
         parent_id: str | None,
+        depth: int = 0,
+        max_depth: int | None = None,
         move: Move | None = None,
     ) -> tuple[Move | None, float]:
         node_id = str(self._node_counter)
@@ -44,8 +46,8 @@ class AlphaBeta(AlgorithmPlugin):
             "state": game.state_to_dict(state),
         })
 
-        if game.is_terminal(state):
-            value = game.evaluate(state)
+        if game.is_terminal(state) or (max_depth is not None and depth >= max_depth):
+            value = game.evaluate(state) or 0.0
             emit_event({
                 "type": "node_evaluated",
                 "id": node_id,
@@ -63,7 +65,7 @@ class AlphaBeta(AlgorithmPlugin):
             next_state = game.apply_move(state, m)
             _, value = self._alpha_beta(
                 game, next_state, emit_event,
-                alpha, beta, node_id, m,
+                alpha, beta, node_id, depth + 1, max_depth, m,
             )
 
             if is_maximizing:

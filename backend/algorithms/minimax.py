@@ -9,9 +9,9 @@ class Minimax(AlgorithmPlugin):
 
     name = "minimax"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent) -> dict[str, Any]:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict[str, Any]:
         self._node_counter = 0
-        best_move, value = self._minimax(game, state, emit_event, parent_id=None)
+        best_move, value = self._minimax(game, state, emit_event, parent_id=None, depth=0, max_depth=max_depth)
         emit_event({
             "type": "search_complete",
             "best_move": game.move_to_dict(best_move) if best_move is not None else None,
@@ -25,6 +25,8 @@ class Minimax(AlgorithmPlugin):
         state: State,
         emit_event: EmitEvent,
         parent_id: str | None,
+        depth: int = 0,
+        max_depth: int | None = None,
         move: Move | None = None,
     ) -> tuple[Move | None, float]:
         node_id = str(self._node_counter)
@@ -38,8 +40,8 @@ class Minimax(AlgorithmPlugin):
             "state": game.state_to_dict(state),
         })
 
-        if game.is_terminal(state):
-            value = game.evaluate(state)
+        if game.is_terminal(state) or (max_depth is not None and depth >= max_depth):
+            value = game.evaluate(state) or 0.0
             emit_event({
                 "type": "node_evaluated",
                 "id": node_id,
@@ -55,7 +57,7 @@ class Minimax(AlgorithmPlugin):
 
         for m in game.get_legal_moves(state):
             next_state = game.apply_move(state, m)
-            _, value = self._minimax(game, next_state, emit_event, node_id, m)
+            _, value = self._minimax(game, next_state, emit_event, node_id, depth + 1, max_depth, m)
 
             if is_maximizing:
                 if value > best_value:

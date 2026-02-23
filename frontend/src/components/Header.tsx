@@ -39,6 +39,7 @@ export const Header: React.FC = () => {
           style={{ marginLeft: 4 }}
         >
           <option value="tic_tac_toe">三目並べ</option>
+          <option value="kings_valley">Kings Valley</option>
         </select>
       </label>
 

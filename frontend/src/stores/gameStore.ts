@@ -25,7 +25,7 @@ export const useGameStore = create<GameState>((set) => ({
   playerSide: 1,
   gameResult: null,
 
-  setGame: (name) => set({ gameName: name }),
+  setGame: (name) => set({ gameName: name, currentState: null, gameResult: null }),
   setAlgorithm: (name) => set({ algorithmName: name }),
   setPlayerSide: (side) => set({ playerSide: side }),
   updateState: (state, currentPlayer) => set({ currentState: state, currentPlayer }),

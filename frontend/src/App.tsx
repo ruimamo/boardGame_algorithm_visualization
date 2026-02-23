@@ -10,10 +10,12 @@ import { ControlBar } from "./components/ControlBar";
 
 function App() {
   const gameName = useGameStore((s) => s.gameName);
+  const resetGame = useGameStore((s) => s.reset);
   const status = useConnectionStore((s) => s.status);
   const stepForward = useTreeStore((s) => s.stepForward);
   const events = useTreeStore((s) => s.events);
   const currentStep = useTreeStore((s) => s.currentStep);
+  const clearTree = useTreeStore((s) => s.clear);
   const isPlaying = usePlaybackStore((s) => s.isPlaying);
   const speed = usePlaybackStore((s) => s.speed);
   const pause = usePlaybackStore((s) => s.pause);
@@ -26,11 +28,22 @@ function App() {
 
   // 接続確立時に初期盤面を取得
   const prevStatus = useRef(status);
+  const prevGameName = useRef(gameName);
   useEffect(() => {
-    if (prevStatus.current !== "connected" && status === "connected") {
+    const statusJustConnected = prevStatus.current !== "connected" && status === "connected";
+    const gameChanged = prevGameName.current !== gameName;
+
+    if (status === "connected" && (statusJustConnected || gameChanged)) {
+      if (gameChanged) {
+        pause();
+        clearTree();
+        resetGame();
+      }
       wsService.getInitialState(gameName);
     }
+
     prevStatus.current = status;
+    prevGameName.current = gameName;
   }, [status, gameName]);
 
   // 自動再生

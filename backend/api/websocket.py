@@ -94,8 +94,9 @@ async def handle_start_search(ws: WebSocket, data: dict) -> None:
         return
 
     state = data["state"]
+    max_depth = 4 if game_name == "kings_valley" else None
     events: list[dict] = []
-    result = algorithm.search(game, state, events.append)
+    result = algorithm.search(game, state, events.append, max_depth=max_depth)
 
     best_move = None
     if result["best_move"] is not None:
