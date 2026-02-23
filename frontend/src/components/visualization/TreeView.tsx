@@ -29,7 +29,7 @@ export const TreeView: React.FC = () => {
         elementsSelectable={false}
       >
         <Background />
-        <Controls />
+        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );
