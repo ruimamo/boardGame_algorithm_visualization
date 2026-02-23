@@ -36,11 +36,11 @@ class KingsValleyBoard:
         print(f"Turn: {player}")
 
     def initBoard(self):
-        self.board = [[1, 1, 2, 1, 1],
+        self.board = [[-1, -1, -2, -1, -1],
                       [0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0],
                       [0, 0, 0, 0, 0],
-                      [-1, -1, -2, -1, -1]]
+                      [1, 1, 2, 1, 1]]
         self.turn = 1
         self.denyKingMove = True
 
