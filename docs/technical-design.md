@@ -35,11 +35,16 @@ boardGame_algorithm_visualization/
 │       │   ├── algorithm.ts               # アルゴリズム関連の型定義
 │       │   └── websocket.ts               # WebSocketメッセージ型
 │       ├── plugins/
-│       │   └── ticTacToe/
+│       │   ├── ticTacToe/
+│       │   │   ├── index.ts               # GameRenderer登録
+│       │   │   ├── Board.tsx              # 盤面コンポーネント
+│       │   │   └── MiniBoard.tsx          # ツリーノード用ミニ盤面
+│       │   └── kingsValley/
 │       │       ├── index.ts               # GameRenderer登録
-│       │       ├── Board.tsx              # 盤面コンポーネント
+│       │       ├── Board.tsx              # 5×5盤面コンポーネント
 │       │       └── MiniBoard.tsx          # ツリーノード用ミニ盤面
 │       └── utils/
+│           ├── gameRenderers.ts           # ゲーム名→GameRendererのレジストリ
 │           └── treeLayout.ts              # d3-hierarchyレイアウト計算
 │
 ├── backend/                     # Python + FastAPI
@@ -49,7 +54,8 @@ boardGame_algorithm_visualization/
 │   │   └── websocket.py         # WebSocketエンドポイント
 │   ├── games/
 │   │   ├── base.py              # GamePlugin ABC
-│   │   └── tic_tac_toe.py       # 三目並べ実装
+│   │   ├── tic_tac_toe.py       # 三目並べ実装
+│   │   └── kings_valley.py      # Kings Valley実装
 │   ├── algorithms/
 │   │   ├── base.py              # AlgorithmPlugin ABC
 │   │   ├── minimax.py           # Minimax実装
@@ -221,6 +227,7 @@ class AlgorithmPlugin(ABC):
         game: GamePlugin,
         state: State,
         emit_event: EmitEvent,
+        max_depth: int | None = None,
     ) -> dict[str, Any]:
         """
         探索を実行し、各ステップで emit_event を呼び出す。
@@ -229,6 +236,7 @@ class AlgorithmPlugin(ABC):
             game: ゲームプラグインインスタンス
             state: 現在の盤面状態
             emit_event: イベントを送出するコールバック関数
+            max_depth: 探索の最大深さ。None の場合は制限なし（三目並べ等の浅いゲーム向け）
 
         Returns:
             {"best_move": Move, "value": float}
@@ -246,9 +254,9 @@ from games.base import GamePlugin, State
 class Minimax(AlgorithmPlugin):
     name = "minimax"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent) -> dict:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict:
         self._node_counter = 0
-        best_move, value = self._minimax(game, state, emit_event, parent_id=None)
+        best_move, value = self._minimax(game, state, emit_event, parent_id=None, depth=0, max_depth=max_depth)
         emit_event({
             "type": "search_complete",
             "best_move": game.move_to_dict(best_move) if best_move is not None else None,
@@ -262,6 +270,8 @@ class Minimax(AlgorithmPlugin):
         state: State,
         emit_event: EmitEvent,
         parent_id: str | None,
+        depth: int = 0,
+        max_depth: int | None = None,
         move=None,
     ) -> tuple:
         node_id = str(self._node_counter)
@@ -276,9 +286,9 @@ class Minimax(AlgorithmPlugin):
             "state": game.state_to_dict(state),
         })
 
-        # 終局判定
-        if game.is_terminal(state):
-            value = game.evaluate(state)
+        # 終局判定 or 深さ制限
+        if game.is_terminal(state) or (max_depth is not None and depth >= max_depth):
+            value = game.evaluate(state) or 0.0
             emit_event({
                 "type": "node_evaluated",
                 "id": node_id,
@@ -294,7 +304,7 @@ class Minimax(AlgorithmPlugin):
 
         for m in game.get_legal_moves(state):
             next_state = game.apply_move(state, m)
-            _, value = self._minimax(game, next_state, emit_event, node_id, m)
+            _, value = self._minimax(game, next_state, emit_event, node_id, depth + 1, max_depth, m)
 
             if is_maximizing:
                 if value > best_value:
@@ -326,12 +336,12 @@ from games.base import GamePlugin, State
 class AlphaBeta(AlgorithmPlugin):
     name = "alpha_beta"
 
-    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent) -> dict:
+    def search(self, game: GamePlugin, state: State, emit_event: EmitEvent, max_depth: int | None = None) -> dict:
         self._node_counter = 0
         best_move, value = self._alpha_beta(
             game, state, emit_event,
             alpha=float("-inf"), beta=float("inf"),
-            parent_id=None,
+            parent_id=None, depth=0, max_depth=max_depth,
         )
         emit_event({
             "type": "search_complete",
@@ -348,6 +358,8 @@ class AlphaBeta(AlgorithmPlugin):
         alpha: float,
         beta: float,
         parent_id: str | None,
+        depth: int = 0,
+        max_depth: int | None = None,
         move=None,
     ) -> tuple:
         node_id = str(self._node_counter)
@@ -361,8 +373,8 @@ class AlphaBeta(AlgorithmPlugin):
             "state": game.state_to_dict(state),
         })
 
-        if game.is_terminal(state):
-            value = game.evaluate(state)
+        if game.is_terminal(state) or (max_depth is not None and depth >= max_depth):
+            value = game.evaluate(state) or 0.0
             emit_event({
                 "type": "node_evaluated",
                 "id": node_id,
@@ -380,7 +392,7 @@ class AlphaBeta(AlgorithmPlugin):
             next_state = game.apply_move(state, m)
             _, value = self._alpha_beta(
                 game, next_state, emit_event,
-                alpha, beta, node_id, m,
+                alpha, beta, node_id, depth + 1, max_depth, m,
             )
 
             if is_maximizing:
@@ -428,7 +440,7 @@ def register_plugins():
     from algorithms.minimax import Minimax
     from algorithms.alpha_beta import AlphaBeta
 
-    for g in [TicTacToe()]:
+    for g in [TicTacToe(), KingsValleyPlugin()]:
         GAMES[g.name] = g
     for a in [Minimax(), AlphaBeta()]:
         ALGORITHMS[a.name] = a
@@ -475,7 +487,8 @@ async def handle_start_search(ws: WebSocket, data: dict):
     def emit_event(event: dict):
         events.append(event)
 
-    result = algorithm.search(game, state, emit_event)
+    max_depth = 4 if game_name == "kings_valley" else None
+    result = algorithm.search(game, state, emit_event, max_depth=max_depth)
 
     # 全イベントをまとめて送信（フロントエンドで再生制御するため）
     await ws.send_json({
@@ -648,9 +661,10 @@ export const ticTacToeRenderer: GameRenderer = {
   MiniBoardComponent: TicTacToeMiniBoard,
 };
 
-// レジストリ
+// レジストリ (frontend/src/utils/gameRenderers.ts)
 const gameRenderers: Record<string, GameRenderer> = {
   tic_tac_toe: ticTacToeRenderer,
+  kings_valley: kingsValleyRenderer,
 };
 ```
 
