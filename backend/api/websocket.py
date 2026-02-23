@@ -3,6 +3,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from games.base import GamePlugin
 from algorithms.base import AlgorithmPlugin
 from games.tic_tac_toe import TicTacToe
+from games.kings_valley import KingsValleyPlugin
 from algorithms.minimax import Minimax
 from algorithms.alpha_beta import AlphaBeta
 
@@ -11,7 +12,7 @@ ALGORITHMS: dict[str, AlgorithmPlugin] = {}
 
 
 def register_plugins() -> None:
-    for g in [TicTacToe()]:
+    for g in [TicTacToe(), KingsValleyPlugin()]:
         GAMES[g.name] = g
     for a in [Minimax(), AlphaBeta()]:
         ALGORITHMS[a.name] = a
@@ -59,8 +60,8 @@ async def handle_apply_move(ws: WebSocket, data: dict) -> None:
         await ws.send_json({"type": "error", "message": f"Unknown game: {game_name}"})
         return
 
-    state = data["state"]["board"]
-    move = data["move"]["position"]
+    state = data["state"]
+    move = data["move"]
     new_state = game.apply_move(state, move)
 
     result = None
@@ -92,7 +93,7 @@ async def handle_start_search(ws: WebSocket, data: dict) -> None:
         await ws.send_json({"type": "error", "message": f"Unknown algorithm: {algorithm_name}"})
         return
 
-    state = data["state"]["board"]
+    state = data["state"]
     events: list[dict] = []
     result = algorithm.search(game, state, events.append)
 

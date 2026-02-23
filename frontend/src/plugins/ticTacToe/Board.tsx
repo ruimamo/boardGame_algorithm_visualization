@@ -12,7 +12,8 @@ export const TicTacToeBoard: React.FC<BoardProps> = ({
   isInteractive,
   lastMove,
 }) => {
-  const { board } = state;
+  const { board } = state as { board: number[] };
+  const lastPos = (lastMove as { position?: number } | null | undefined)?.position;
 
   return (
     <svg
@@ -22,7 +23,7 @@ export const TicTacToeBoard: React.FC<BoardProps> = ({
     >
       {/* 1. lastMove のハイライト背景（グリッド線の下） */}
       {board.map((_, i) => {
-        if (lastMove?.position !== i) return null;
+        if (lastPos !== i) return null;
         const row = Math.floor(i / 3);
         const col = i % 3;
         return (

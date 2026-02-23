@@ -1,7 +1,7 @@
 import type { MiniBoardProps } from "../../types/game";
 
 export const TicTacToeMiniBoard: React.FC<MiniBoardProps> = ({ state, size }) => {
-  const { board } = state;
+  const { board } = state as { board: number[] };
   const cell = size / 3;
 
   const cx = (col: number) => col * cell + cell / 2;
